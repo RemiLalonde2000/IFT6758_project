@@ -14,6 +14,7 @@ class Data:
         load_dotenv()
 
         self.data_path = os.getenv("DATA_PATH")
+        self.data_path = "../."+self.data_path
         os.makedirs(self.data_path, exist_ok=True)
         if self.data_path is None:
             raise ValueError("Environment variable DATA_PATH is not set.")
