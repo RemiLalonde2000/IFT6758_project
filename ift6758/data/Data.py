@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 
 class Data:
-    def __init__(self, max_workers):
+    def __init__(self):
 
         load_dotenv()
 
@@ -20,7 +20,7 @@ class Data:
             raise ValueError("Environment variable DATA_PATH is not set.")
 
         self.session = requests.Session()
-        self.max_workers = max_workers
+        self.max_workers = 16
         self.data = self.get_all_games_id()
         self.big_file_path = 'play_by_play.json'
 
