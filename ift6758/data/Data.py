@@ -11,13 +11,10 @@ from dotenv import load_dotenv
 class Data:
     def __init__(self):
 
-        load_dotenv()
 
-        self.data_path = os.getenv("DATA_PATH")
-        self.data_path = "../."+self.data_path
+        self.data_path = './games_data'
+
         os.makedirs(self.data_path, exist_ok=True)
-        if self.data_path is None:
-            raise ValueError("Environment variable DATA_PATH is not set.")
 
         self.session = requests.Session()
         self.max_workers = 16
@@ -175,7 +172,7 @@ class Data:
 
 
 if __name__=="__main__":
-    d = Data(max_workers=16)
+    d = Data()
     d.load_data_local(['2016-2017', '2017-2018', '2018-2019', '2020-2021', '2021-2022', '2022-2023', '2023-2024',], merge_one_file=True)
     # data = d.get_data('./data/play_by_play.json')
 

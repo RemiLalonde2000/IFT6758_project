@@ -4,22 +4,17 @@ import sys
 sys.path.append(os.path.abspath("../.."))
 from ift6758.GamesUtils import GamesUtils
 from ift6758.data.Data import Data
-from dotenv import load_dotenv
 import pandas as pd
 
 class Pbp_to_DataFrame:
 
     def __init__(self):
-        load_dotenv()
 
-        relative_path = os.getenv("DATA_PATH")
-        project_root = os.path.abspath("../..")
-        self.data_path = os.path.join(project_root, relative_path)
+        self.data_path = '../../games_data'
 
-
+        
     def get_game(self, id):
         season = id[:4] + '-' + str(int(id[:4])+1)
-        path = os.path.join(self.data_path, season, id+'.json')
         game = Data.get_data(os.path.join(self.data_path, season, id+'.json'))
         return game
     
@@ -135,16 +130,3 @@ if __name__=="__main__":
                        aggfunc='count',
                        fill_value=0)
     print(pt)
-
-
-# ● l'heure/la période de jeu
-
-# ● l'identifiant du jeu ----
-# ● les informations sur l'équipe (quelle équipe a tiré) ----
-# ● s'il s'agit d'un tir ou d'un but ----
-# ● les coordonnées sur la glace
-# ● le nom du tireur et du gardien de but (ne vous inquiétez pas des assists pour l'instant) --------
-# ● le type de tir -------
-# ● si c'était sur un filet vide -----
-
-# ● si un but était à force égale en désavantage numérique ou en avantage numérique. -------
