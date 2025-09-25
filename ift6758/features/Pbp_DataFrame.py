@@ -1,7 +1,7 @@
 
 import os
 import sys
-sys.path.append(os.path.abspath("../.."))
+sys.path.append(os.path.abspath("."))
 from ift6758.GamesUtils import GamesUtils
 from ift6758.data.Data import Data
 import pandas as pd
@@ -10,7 +10,7 @@ class Pbp_to_DataFrame:
 
     def __init__(self):
 
-        self.data_path = '../../games_data'
+        self.data_path = './games_data'
 
         
     def get_game(self, id):

@@ -1,9 +1,10 @@
 numpy
 pandas
+python-dotenv
 matplotlib
 seaborn
 requests
-opencv-python
+opencv
 tqdm
 lxml
 plotly
