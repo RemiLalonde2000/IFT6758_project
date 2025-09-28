@@ -12,7 +12,7 @@ class Data:
     def __init__(self):
 
 
-        self.data_path = './games_data'
+        self.data_path = '../../games_data'
 
         os.makedirs(self.data_path, exist_ok=True)
 
@@ -173,7 +173,7 @@ class Data:
 
 if __name__=="__main__":
     d = Data()
-    d.load_data_local(['2016-2017', '2017-2018', '2018-2019', '2020-2021', '2021-2022', '2022-2023', '2023-2024',], merge_one_file=True)
+    d.load_data_local(['2016-2017', '2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024',], merge_one_file=True)
     # data = d.get_data('./data/play_by_play.json')
 
     # d.load_data_local(['2016-2017'], merge_one_file=True)

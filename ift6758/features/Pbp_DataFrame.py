@@ -1,16 +1,16 @@
 
 import os
 import sys
-sys.path.append(os.path.abspath("."))
-from ift6758.GamesUtils import GamesUtils
-from ift6758.data.Data import Data
+sys.path.append(os.path.abspath("../"))
+from GamesUtils import GamesUtils
+from data.Data import Data
 import pandas as pd
 
 class Pbp_to_DataFrame:
 
     def __init__(self):
 
-        self.data_path = './games_data'
+        self.data_path = '../../games_data'
 
         
     def get_game(self, id):
@@ -21,11 +21,14 @@ class Pbp_to_DataFrame:
 
     def get_net_and_situation(self, teams, details, event):
         team_event_type = teams.get(details['eventOwnerTeamId'])[1]
-        situationCode = event['situationCode']
-        away_goalie = int(situationCode[0])
-        away_player = int(situationCode[1])
-        home_player = int(situationCode[2])
-        home_goalie = int(situationCode[3])
+        situationCode = event.get('situationCode')
+        if situationCode is None:
+            away_goalie = away_player = home_player = home_goalie = None
+        else:
+            away_goalie = int(situationCode[0])
+            away_player = int(situationCode[1])
+            home_player = int(situationCode[2])
+            home_goalie = int(situationCode[3])
 
         if team_event_type == 'home':
             if away_goalie == 1:
@@ -34,15 +37,18 @@ class Pbp_to_DataFrame:
                 filet = 'Empty'
             else:
                 filet = None
-
-            if (away_goalie + away_player) == (home_goalie + home_player):
-                situation = 'Even strength'
-            elif (away_goalie + away_player) > (home_goalie + home_player):
-                situation = 'Short-handed'
-            elif (away_goalie + away_player) < (home_goalie + home_player):
-                situation = 'Power play'
+                
+            if None in (away_goalie, away_player, home_goalie, home_player):
+                situation = 'Unknown'
             else:
-                situation = None
+                if (away_goalie + away_player) == (home_goalie + home_player):
+                    situation = 'Even strength'
+                elif (away_goalie + away_player) > (home_goalie + home_player):
+                    situation = 'Short-handed'
+                elif (away_goalie + away_player) < (home_goalie + home_player):
+                    situation = 'Power play'
+                else:
+                    situation = None
             
 
         elif team_event_type == 'away':
@@ -52,21 +58,25 @@ class Pbp_to_DataFrame:
                 filet = 'Empty'
             else:
                 filet = None
-
-            if (away_goalie + away_player) == (home_goalie + home_player):
-                situation = 'Even strength'
-            elif (away_goalie + away_player) > (home_goalie + home_player):
-                situation = 'Power play'
-            elif (away_goalie + away_player) < (home_goalie + home_player):
-                situation = 'Short-handed'
+                
+            if None in (away_goalie, away_player, home_goalie, home_player):
+                situation = 'Unknown'
             else:
-                situation = None
+                if (away_goalie + away_player) == (home_goalie + home_player):
+                    situation = 'Even strength'
+                elif (away_goalie + away_player) > (home_goalie + home_player):
+                    situation = 'Power play'
+                elif (away_goalie + away_player) < (home_goalie + home_player):
+                    situation = 'Short-handed'
+                else:
+                    situation = None
         return filet, situation
 
     def get_event_type_and_player(self, roaster, details, event):
 
         if event['typeDescKey'] == 'shot-on-goal':
-            player = roaster.get(details['shootingPlayerId'])[0]
+            player_id = details.get('shootingPlayerId')
+            player = roaster.get(player_id, [None])[0] if player_id else None
             event_type = 'Shot'
         elif event['typeDescKey'] == 'goal':
             player = roaster.get(details['scoringPlayerId'])[0]
@@ -79,7 +89,7 @@ class Pbp_to_DataFrame:
     
     def build_game_DataFrame(self, game_id):
         #away goalie (1=in net, 0=pulled)-away skaters-home skaters-home goalie (1=in net, 0=pulled)
-        #https://gitlab.com/dword4/nhlapi/-/issues/112?utm_source=chatgpt.com
+        #https://gitlab.com/dword4/nhlapi/-/issues/112?
         game = self.get_game(game_id)
         teams = GamesUtils.get_teams(game)
         roaster = GamesUtils.get_game_roaster(game)
@@ -91,12 +101,13 @@ class Pbp_to_DataFrame:
             
                 event_id = event['eventId']
                 event_team = teams.get(details['eventOwnerTeamId'])[0].split('-')[0]
-                goalie = roaster.get(details['goalieInNetId'])[0]
+                goalie_id = details.get('goalieInNetId')
+                goalie = roaster.get(goalie_id, [None])[0] if goalie_id else None
                 period = event['periodDescriptor']['number']
                 period_time = event['timeInPeriod']
-                x = details['xCoord']
-                y = details['yCoord']
-                shotType = details['shotType']
+                x = details.get('xCoord')
+                y = details.get('yCoord')
+                shotType = details.get('shotType', 'Unknown')
 
                 player, event_type = self.get_event_type_and_player(roaster, details, event)
                 filet, situation = self.get_net_and_situation(teams, details, event)
@@ -120,9 +131,9 @@ class Pbp_to_DataFrame:
 
 if __name__=="__main__":
     c = Pbp_to_DataFrame()
-    df = c.build_game_DataFrame('2016010004')
+    df = c.build_game_DataFrame('2023020727')
     print(df)
-    shots = df[df['Event Type'] == 'Shot']
+    shots = df[df['Event Type'] == 'Goal']
     print(shots)
     pt = shots.pivot_table(index='Team',
                        columns='Type of Shot',
