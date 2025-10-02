@@ -87,12 +87,20 @@ class Pbp_to_DataFrame:
 
         return player, event_type
     
+    def get_home_team(self, teams):
+        for team in teams.values():
+            if team[1] == "home":
+                home_team_name, _ = team
+                break
+        return home_team_name.split(" - ")[0]
+    
     def build_game_DataFrame(self, game_id):
         #away goalie (1=in net, 0=pulled)-away skaters-home skaters-home goalie (1=in net, 0=pulled)
         #https://gitlab.com/dword4/nhlapi/-/issues/112?
         game = self.get_game(game_id)
         teams = GamesUtils.get_teams(game)
         roaster = GamesUtils.get_game_roaster(game)
+        home_team = self.get_home_team(teams)
 
         pbp_df = []
         for event in game['plays']:
@@ -108,6 +116,8 @@ class Pbp_to_DataFrame:
                 x = details.get('xCoord')
                 y = details.get('yCoord')
                 shotType = details.get('shotType', 'Unknown')
+                shot_zone = details.get('zoneCode')
+                home_team_D_side = event.get('homeTeamDefendingSide')
 
                 player, event_type = self.get_event_type_and_player(roaster, details, event)
                 filet, situation = self.get_net_and_situation(teams, details, event)
@@ -123,7 +133,10 @@ class Pbp_to_DataFrame:
                        'Period':period,
                        'Time':period_time,
                        'X':x,
-                       'Y':y
+                       'Y':y,
+                       'Zone': shot_zone,
+                       'Home Team D Side': home_team_D_side,
+                       'Home Team': home_team
                     }
                 pbp_df.append(row)
         return pd.DataFrame(pbp_df)
