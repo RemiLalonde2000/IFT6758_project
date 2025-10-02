@@ -14,12 +14,32 @@ class Pbp_to_DataFrame:
 
         
     def get_game(self, id):
+        """Load a specific game play-by-play JSON file 
+
+        Args:
+            id (String): Game ID
+
+        Returns:
+            dic: dictionnary of the JSON file
+        """
         season = id[:4] + '-' + str(int(id[:4])+1)
         game = Data.get_data(os.path.join(self.data_path, season, id+'.json'))
         return game
-    
+     
 
     def get_net_and_situation(self, teams, details, event):
+        """Determine the net state (empty or not) and the game situation 
+            (even strength, power play, short-handed)
+
+
+        Args:
+            teams (dict): Dictionary mapping team ID to team name and home/away team
+            details (dict): Details of certain event in a game 
+            event (dict): The event itself
+
+        Returns:
+            Tuple(String, String): Tuple containing the net situation (filet) and the game situation (even strength, power play, short-handed)
+        """
         team_event_type = teams.get(details['eventOwnerTeamId'])[1]
         situationCode = event.get('situationCode')
         if situationCode is None:
@@ -30,6 +50,7 @@ class Pbp_to_DataFrame:
             home_player = int(situationCode[2])
             home_goalie = int(situationCode[3])
 
+        # Home team
         if team_event_type == 'home':
             if away_goalie == 1:
                 filet = 'Not empty'
@@ -50,7 +71,7 @@ class Pbp_to_DataFrame:
                 else:
                     situation = None
             
-
+        # Away team
         elif team_event_type == 'away':
             if home_goalie == 1:
                 filet = 'Not empty'
@@ -73,7 +94,16 @@ class Pbp_to_DataFrame:
         return filet, situation
 
     def get_event_type_and_player(self, roaster, details, event):
+        """Get the event type (Shot/Goal) and the player involved
 
+        Args:
+            roaster (dict): Dictionary mapping each player id the their name
+            details (dict): Details of certain event in a game
+            event (dict): The event itself
+
+        Returns:
+            Tuple(Sting, String): Tuple containing the name of the involved player and the event type
+        """
         if event['typeDescKey'] == 'shot-on-goal':
             player_id = details.get('shootingPlayerId')
             player = roaster.get(player_id, [None])[0] if player_id else None
@@ -95,6 +125,29 @@ class Pbp_to_DataFrame:
         return home_team_name.split(" - ")[0]
     
     def build_game_DataFrame(self, game_id):
+        """Build a DataFrame of shot and goal events for a specific game
+
+        Args:
+            game_id (String): The game ID for wich we want to build the DataFrame
+
+        Returns:
+            pandas.Dataframe: DataFrame with one row per shot or goal event, containing:
+                - ID (int) : Event ID
+                - Team (String): Team abbreviation
+                - Event Type (String): 'Shot' or 'Goal'
+                - Type of Shot (String): Shot type (e.g., 'wrist', 'slap', 'Unknown')
+                - Shooter (String or None): Name of the shooting/scoring player
+                - Goalie (String or None): Name of the goalie in net
+                - Net (String or None): 'Not empty', 'Empty', or None
+                - Situation (String or None): 'Even strength', 'Power play', 'Short-handed'.
+                - Period (int): Game period number
+                - Time (String): Time in the period (MM:SS format)
+                - X (int or None): X coordinate of the event
+                - Y (int or None): Y coordinate of the event
+                - Zone (String): The zone of the event ("O", "D" or "N")
+                - Home Team D Side (String): The defending side of the home team
+                - Home Team (String) : The name of the home team
+        """
         #away goalie (1=in net, 0=pulled)-away skaters-home skaters-home goalie (1=in net, 0=pulled)
         #https://gitlab.com/dword4/nhlapi/-/issues/112?
         game = self.get_game(game_id)

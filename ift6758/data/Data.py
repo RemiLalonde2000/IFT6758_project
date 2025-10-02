@@ -1,12 +1,10 @@
 import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
 import concurrent.futures as cf
-from os import remove
 
 import requests
 import json
 import os
-from dotenv import load_dotenv
 
 class Data:
     def __init__(self):
@@ -22,7 +20,17 @@ class Data:
         self.big_file_path = 'play_by_play.json'
 
     def __add__(self, season):
+        """ Add a season to the dataset via the `+` operator.
 
+        Args:
+            season (String): Season to add in the format "YYYY-YYYY"
+
+        Raises:
+            TypeError: If `season` is not a string.
+
+        Returns:
+            self: The current instance with the new season's data loaded.
+        """
         if not isinstance(season, str):
             raise TypeError("Season must be a string of format YYYY-YYYY")
 
@@ -30,6 +38,14 @@ class Data:
         return self
 
     def get_all_games_id(self):
+        """Retrieve all game IDs from the NHL API or local cache.
+
+        Raises:
+            RuntimeError:  If the API request fails
+
+        Returns:
+            dic : JSON data containing all IDs of the games
+        """
         file_path = os.path.join(self.data_path, 'all_games.json')
         if os.path.exists(file_path):
             with open(file_path, 'r') as file:
@@ -46,6 +62,16 @@ class Data:
 
 
     def get_games_id_from_season(self, season_start):
+        """ Get all games IDs from a specific season
+
+        Iterate over the loaded game data and extract IDs of the season games.
+
+        Args:
+            season_start (String): THe start year of the season for example "2016-2017" -> "2016"
+
+        Returns:
+            List[int]: List fo all the season games IDs
+        """
         id_list_game = []
 
         for element in self.data['data']:
@@ -54,6 +80,16 @@ class Data:
         return id_list_game
 
     def fetch_one_game_pbp(self, game_id):
+        """Get the play-by-play info of a specific game
+
+        Args:
+            game_id (int): The gaem ID we want to retrieve the play-by-play from.
+
+        Returns:
+            Tuple: Tuple containing the json fo the play-by-play data or if absent return None,
+                    game_id,
+                    None or the exception if the request to the api fail.
+        """
         try:
             pbp = self.session.get(f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play")
             if pbp.status_code == 404:
@@ -65,13 +101,29 @@ class Data:
 
 
     def load_data_local(self, season, merge_one_file=True):
+        """Load play-by-play data for one or more seasons into the local data folder.
+
+            For each season provided:
+                - Retrieve all games IDs for the season.
+                - Checks wich games are already downloaded in the local data.
+                - Retrieve missing games data for play-plby-play.
+                - Saves each game JSON file in a season folder.
+                - Optionally merges all ames play-by-play  for th seasons into one big JSON file.
+
+        Args:
+            season (String or List[String]): The season or the seasons list to be load.
+            merge_one_file (bool, optional): If true also merge all the games into one big file. Defaults to True.
+
+        Raises:
+            TypeError: If `season` is neither a string nor a list of strings.
+        """
 
         if isinstance(season, str):
             season = [season]
         elif isinstance(season, list):
             season = season
         else:
-            raise ValueError("Season must be string or list")
+            raise TypeError("Season must be string or list")
 
         pbp_big_file = None
         for s in season:
@@ -95,11 +147,10 @@ class Data:
                 continue
 
             play_by_play_result = {}
-            missing_game = {}
-            with ThreadPoolExecutor(max_workers=self.max_workers) as e:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as ex:
                 count = 0
                 for ids in games_not_fetch:
-                    futures.append(e.submit(self.fetch_one_game_pbp, ids))
+                    futures.append(ex.submit(self.fetch_one_game_pbp, ids))
 
                 for i, completed in enumerate(cf.as_completed(futures)):
                     pbp, game_id, e = completed.result()
@@ -110,8 +161,6 @@ class Data:
 
                         if merge_one_file:
                             play_by_play_result[game_id] = pbp
-                    else:
-                        missing_game[game_id] = e
 
                     count = count + 1
                     if count%50 == 0 or count == total_games:
@@ -122,6 +171,13 @@ class Data:
 
 
     def add_data_to_big_file(self, pbp_big_file, s, play_by_play_result):
+        """Add data to the big data file containing all the games Pbp.
+
+        Args:
+            pbp_big_file (dic): The file we want to add the data to
+            s (String): The season
+            play_by_play_result (dic): The play-by-play information of all games in a season
+        """
         if pbp_big_file is None:
             pbp_big_file = self.load_big_pbp_file()
         if s not in pbp_big_file:
@@ -131,6 +187,11 @@ class Data:
         Data.save_json(pbp_big_file, os.path.join(self.data_path, self.big_file_path))
 
     def load_big_pbp_file(self):
+        """Load the big file containing all the games Pbp data
+
+        Returns:
+            dic: The big file loaded
+        """
         path = os.path.join(self.data_path, self.big_file_path)
         os.makedirs(self.data_path, exist_ok=True)
         if os.path.exists(path):
@@ -140,6 +201,17 @@ class Data:
 
     @staticmethod
     def get_data(file_path):
+        """Load the file (data)
+
+        Args:
+            file_path (String): The file path we want to load.
+
+        Raises:
+            ValueError: If the file doesn't exist
+
+        Returns:
+            dic: The JSON file loaded
+        """
         if os.path.exists(file_path):
             with open(file_path, 'r') as file:
                 file = json.load(file)
@@ -149,10 +221,24 @@ class Data:
 
     @staticmethod
     def save_json(data_file, file_path):
+        """Save the data into a json format
+
+        Args:
+            data_file (dic): The data we want to save
+            file_path (String): THe path we want to save the data
+        """
         with open(file_path, "w") as f:
             json.dump(data_file, f)
 
     def remove_season(self, season):
+        """Remove a season from the data in the season folder and in the big data file.
+
+        Args:
+            season (String): The season we want to delete
+
+        Raises:
+            ValueError: if the big file is not found
+        """
         season_path = os.path.join(self.data_path, season)
         big_file_path = os.path.join(self.data_path, self.big_file_path)
 
@@ -173,10 +259,8 @@ class Data:
 
 if __name__=="__main__":
     d = Data()
-    d.load_data_local(['2016-2017', '2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024',], merge_one_file=True)
-    # data = d.get_data('./data/play_by_play.json')
-
-    # d.load_data_local(['2016-2017'], merge_one_file=True)
-    # d = d + '2018-2019'
-    data = d.get_data(os.path.join(d.data_path, 'play_by_play.json'))
+    # d.load_data_local(['2016-2017', '2017-2018', '2018-2019', 
+    #                    '2019-2020', '2020-2021', '2021-2022', 
+    #                    '2022-2023', '2023-2024',], merge_one_file=True)
+    data = d.get_data(os.path.join(d.data_path, '2017-2018', '2017020005.json'))
     print(len(data))
