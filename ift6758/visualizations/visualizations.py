@@ -75,7 +75,7 @@ vers quelle direction chaque tir à été effectué.
 """
 def divide_N_zone(df):
     
-    home_team_D_side_existe = 'Home Team D Side' in df.columns
+    home_team_D_side_exists = 'Home Team D Side' in df.columns
     
     #  Boucle sur chaque ligne
     for idx, row in df.iterrows():
@@ -86,7 +86,7 @@ def divide_N_zone(df):
         x_neg = row['X'] < 0  
         
         # Défense de l'équipe locale à gauche ?
-        if home_team_D_side_existe:
+        if home_team_D_side_exists:
             home_left = row['Home Team D Side'] == 'left'
         # Si la colonne 'Home Team D Side' n'existe pas (valeurs manquantes)
         else:
