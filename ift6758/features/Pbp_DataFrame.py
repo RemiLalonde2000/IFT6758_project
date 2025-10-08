@@ -132,6 +132,7 @@ class Pbp_to_DataFrame:
 
         Returns:
             pandas.Dataframe: DataFrame with one row per shot or goal event, containing:
+                - Game ID: ID of the game where the event took place (int)
                 - ID (int) : Event ID
                 - Team (String): Team abbreviation
                 - Event Type (String): 'Shot' or 'Goal'
@@ -175,7 +176,8 @@ class Pbp_to_DataFrame:
                 player, event_type = self.get_event_type_and_player(roaster, details, event)
                 filet, situation = self.get_net_and_situation(teams, details, event)
 
-                row = {'ID': event_id, 
+                row = {'Game ID': game_id,
+                       'ID': event_id, 
                        'Team':event_team, 
                        'Event Type':event_type, 
                        'Type of Shot':shotType, 
