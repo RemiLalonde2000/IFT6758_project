@@ -20,14 +20,16 @@ def get_season_df(season):
     # Transformer en DataFrame les événements de chaque match et
     # sauvegarder chaque DataFrame dans une liste
     for game in os.listdir(season_folder):
+        
         game_id = os.path.splitext(game)[0]
         game_df = Pbp_to_DataFrame().build_game_DataFrame(game_id) 
-        # Ne pas prendre en compte les matchs sans événements (données manquantes)
-        if game_df.empty:
-            print(f"Empty DataFrame for game {game_id}")
-        else:
-            games_dfs.append(game_df)
         
+        # Ne pas prendre en compte les matchs sans événements (données manquantes)
+        if not game_df.empty:
+            # Éliminer les colonnes sans valeurs (all NaN)
+            game_df = game_df.dropna(axis=1, how='all')
+            games_dfs.append(game_df)
+    
     # Concaténer les DataFrames de chaque match pour former le DataFrame de la saison
     season_df = pd.concat(games_dfs, ignore_index=True)
     
@@ -72,14 +74,27 @@ Ceci nous aidera à identifier correctement de quel côté du terrain et
 vers quelle direction chaque tir à été effectué.
 """
 def divide_N_zone(df):
+    
+    home_team_D_side_existe = 'Home Team D Side' in df.columns
+    
     #  Boucle sur chaque ligne
     for idx, row in df.iterrows():
         if row['Zone'] != 'N':
             continue  # Ignorer les zones qui ne sont pas 'N'
+            
+        # Coordonnée X négative ?
+        x_neg = row['X'] < 0  
         
-        home_left = row['Home Team D Side'] == 'left'  # Défense de l'équipe locale à gauche ?
-        x_neg = row['X'] < 0  # Coordonnée X négative ?
-        
+        # Défense de l'équipe locale à gauche ?
+        if home_team_D_side_existe:
+            home_left = row['Home Team D Side'] == 'left'
+        # Si la colonne 'Home Team D Side' n'existe pas (valeurs manquantes)
+        else:
+            if x_neg:
+                home_left = False if row['Home Team Shot'] else True
+            else:
+                home_left = True if row['Home Team Shot'] else False
+            
         # Logique ND/NO selon si tir de l'équipe locale ou visiteuse
         if row['Home Team Shot']:
             df.at[idx, 'Zone'] = 'ND' if (home_left and x_neg) or (not home_left and not x_neg) else 'NO'
@@ -136,17 +151,18 @@ la distance de chaque évènement par rapport aux filets.
 On peut choisir si avoir les données sous forme précise ou arondie.
 """
 def get_shots_distances(season, rounded=False):
-    df = get_season_df(season)  # Récupérer les données
-
-    df['Distance'] = df.apply(get_event_distance, axis=1)  # Calculer la distance
     
-    unknown_shots_nb = df[df['Type of Shot'] == "Unknown"].shape[0]
-    print(f'{unknown_shots_nb} shots of unknown type deleted')
-    df = df[df['Type of Shot'] != "Unknown"]  # Éliminer les tirs avec type inconnu (type de tir manquant)
+    # Récupérer les données
+    df = get_season_df(season) 
 
-    nan_distances_nb = df['Distance'].isna().sum()
-    print(f'{nan_distances_nb} distances impossible to calculate due to missing coordinates data')
-    df = df.dropna(subset=['Distance'])       # Éliminer les tirs sans distance (coordonnées manquantes)
+    # Calculer la distance
+    df['Distance'] = df.apply(get_event_distance, axis=1)  
+    
+    # Éliminer les tirs avec type inconnu (type de tir manquant)
+    df = df[df['Type of Shot'] != "Unknown"] 
+
+    # Éliminer les tirs sans distance (coordonnées manquantes)
+    df = df.dropna(subset=['Distance']) 
     
     if rounded:
         # Retourner aussi une version où les distances ont été arrondies à l'entier le plus proche
