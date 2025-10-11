@@ -259,8 +259,8 @@ class Data:
 
 if __name__=="__main__":
     d = Data()
-    # d.load_data_local(['2016-2017', '2017-2018', '2018-2019', 
-    #                    '2019-2020', '2020-2021', '2021-2022', 
-    #                    '2022-2023', '2023-2024',], merge_one_file=True)
+    d.load_data_local(['2016-2017', '2017-2018', '2018-2019', 
+                       '2019-2020', '2020-2021', '2021-2022', 
+                       '2022-2023', '2023-2024',], merge_one_file=True)
     data = d.get_data(os.path.join(d.data_path, '2017-2018', '2017020005.json'))
     print(len(data))
