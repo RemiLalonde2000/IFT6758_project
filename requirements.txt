@@ -4,7 +4,7 @@ python-dotenv
 matplotlib
 seaborn
 requests
-opencv
+opencv-python
 tqdm
 lxml
 plotly
@@ -12,3 +12,4 @@ ipywidgets
 ipykernel
 jupyterlab>=3.0.0
 setuptools
+scipy
