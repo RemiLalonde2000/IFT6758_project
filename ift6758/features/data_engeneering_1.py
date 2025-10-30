@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.append(os.path.abspath("../"))
 from features.Pbp_DataFrame import Pbp_to_DataFrame
-from visualizations.visualizations import divide_N_zone, get_event_distance
+from ift6758.visualizations.visualizations import divide_N_zone, get_event_distance
 
 
 def get_event_angle(event):
