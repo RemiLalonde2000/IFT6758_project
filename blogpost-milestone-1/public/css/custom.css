@@ -1,0 +1,47 @@
+/* Override Lanyon CSS */
+.content {
+  max-width: 1100px;
+}
+
+.container {
+  max-width: 1200px;
+}
+
+iframe {
+  display: block;
+  margin: 35px auto 25px auto;
+  padding: 0;
+  border: none;
+  width: 1000px;
+  height: 576px;
+}
+
+hr{
+  width: 75%;
+   border: 1px solid lightgray;
+  color: lightgray;
+  margin: auto;
+}
+
+h1{
+  margin: 100px 0 40px 0;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+h2{
+  margin: 40px 0;
+}
+
+h3{
+  margin: 40px 0;
+}
+
+#note-importante-sur-léquipe-et-la-répartition-du-travail{
+  margin-top: 70px;
+}
+
+body{
+  text-align: justify;
+}
