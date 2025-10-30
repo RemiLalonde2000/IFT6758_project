@@ -1,6 +1,6 @@
 # Setup
-title:               IFT6758 project - Milestone 1
-tagline:             'Rapport du Milestone 1'
+title:               IFT6758 project - Milestone 2
+tagline:             'Rapport du Milestone 2'
 description:         'A reserved <a href="https://jekyllrb.com" target="_blank">Jekyll</a> theme that places the utmost gravity on content with a hidden drawer. Made by <a href="https://twitter.com/mdo" target="_blank">@mdo</a>.'
 url:                 ''
 baseurl:             ''
@@ -9,9 +9,9 @@ permalink:           pretty
 
 # About/contact
 author:
-  name:              Martin Medina et Remi Lalonde
+  name:              Martin Medina, Remi Lalonde et Guillaume Collin
   url:               
-  email:             martin.medina@umontreal.ca et remi.lalonde@umontreal.ca
+  email:             martin.medina@umontreal.ca, remi.lalonde@umontreal.ca et guillaume.collin@umontreal.ca
 
 # Gems
 plugins:
